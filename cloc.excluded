@@ -1,0 +1,5 @@
+resources/public/css/telsos.css
+resources/public/js/telsos.js
+resources/public/assets/
+node_modules/
+.clj-kondo/

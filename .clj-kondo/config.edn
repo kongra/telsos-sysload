@@ -1,0 +1,13 @@
+{:linters
+ {:single-key-in
+  {:level :error}
+
+  :shadowed-var
+  {:level :warning}
+
+  :redundant-fn-wrapper
+  {:level :warning}
+
+  :refer-all
+  {:exclude
+   [clojure.test]}}}
