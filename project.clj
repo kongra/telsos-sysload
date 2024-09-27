@@ -1,4 +1,4 @@
-(defproject telsos-sysload "0.1.0-SNAPSHOT"
+(defproject telsos-sysload "0.1.0"
   :description "Systems analysis and loading facility"
   :url "https://github.com/kongra/telsos-sysload"
   :license
@@ -7,7 +7,8 @@
 
   :dependencies
   [[org.clojure/clojure         "1.12.0"]
-   [org.clojure/tools.namespace  "1.5.0"]]
+   [org.clojure/tools.namespace "1.5.0" ]
+   [nrepl/nrepl                 "1.3.0" ]]
 
   :repl-options
   {:init-ns telsos-sysload.core}
