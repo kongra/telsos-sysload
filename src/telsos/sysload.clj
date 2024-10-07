@@ -8,6 +8,7 @@
    [clojure.tools.namespace.file       :as          ns-file]
    [clojure.tools.namespace.find       :as          ns-find]
    [clojure.tools.namespace.parse      :as         ns-parse]
+   [hashp.core                         :as       hashp-core]
    [nrepl.middleware                   :as nrepl-middleware])
 
   (:import (java.lang.management ManagementFactory RuntimeMXBean)))
@@ -260,7 +261,9 @@
   (when-let [user-ns (find-ns 'user)]
     (intern user-ns 'boot! boot!)
     (intern user-ns 'sync! sync!)
-    (println "boot! and sync! interned into user")))
+    (println "boot! and sync! interned into user")
+
+    #p :hashp-preloaded))
 
 (defn middleware
   [handler]

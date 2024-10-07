@@ -8,6 +8,7 @@
   :dependencies
   [[org.clojure/clojure         "1.12.0"]
    [org.clojure/tools.namespace "1.5.0" ]
+   [hashp                       "0.2.2" ]
    [nrepl/nrepl                 "1.3.0" ]]
 
   :repl-options
