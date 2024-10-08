@@ -27,6 +27,11 @@
   (build-api/compile-clj
    {:basis     basis
     :src-dirs  src-dirs
+    :java-opts ["-XX:+UseStringDeduplication"
+                "-Dclojure.compiler.direct-linking=true"
+                "-Dclojure.warn.on.reflection=false"
+                "-Dclojure.assert=true"]
+
     :class-dir class-dir})
 
   (println "compiled" (prs src-dirs) "into" (prs class-dir)))
