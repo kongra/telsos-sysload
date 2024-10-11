@@ -20,43 +20,44 @@
 (defn- prs [x] (with-out-str (pr x)))
 
 (defn clean [_]
-  (build-api/delete {:path build-folder})
-  (println "deleted" (prs build-folder)))
+  (println "deleting" (prs build-folder))
+  (time
+   (build-api/delete {:path build-folder})))
 
 (defn compile [_]
-  (build-api/compile-clj
-   {:basis     basis
-    :src-dirs  src-dirs
-    :java-opts ["-XX:+UseStringDeduplication"
-                "-Dclojure.compiler.direct-linking=true"
-                "-Dclojure.warn.on.reflection=false"
-                "-Dclojure.assert=true"]
+  (println "compiling" (prs src-dirs) "into" (prs class-dir))
+  (time
+   (build-api/compile-clj
+    {:basis     basis
+     :src-dirs  src-dirs
+     :java-opts ["-XX:+UseStringDeduplication"
+                 "-Dclojure.compiler.direct-linking=true"
+                 "-Dclojure.warn.on.reflection=false"
+                 "-Dclojure.assert=true"]
 
-    :class-dir class-dir})
-
-  (println "compiled" (prs src-dirs) "into" (prs class-dir)))
+     :class-dir class-dir})))
 
 (defn jar [_]
-  (build-api/write-pom
-   {:class-dir class-dir
-    :lib       lib
-    :version   version
-    :basis     basis
-    :src-dirs  src-dirs})
+  (println "writing pom for" lib version)
+  (time
+   (build-api/write-pom
+    {:class-dir class-dir
+     :lib       lib
+     :version   version
+     :basis     basis
+     :src-dirs  src-dirs}))
 
-  (println "wrote pom for" lib version)
+  (println "copying" (prs src+resources-dirs) "to" (prs class-dir))
+  (time
+   (build-api/copy-dir
+    {:src-dirs   src+resources-dirs
+     :target-dir class-dir}))
 
-  (build-api/copy-dir
-   {:src-dirs   src+resources-dirs
-    :target-dir class-dir})
-
-  (println "copied" (prs src+resources-dirs) "to" (prs class-dir))
-
-  (build-api/jar
-   {:class-dir class-dir
-    :jar-file  jar-file})
-
-  (println "created" jar-file))
+  (println "creating" jar-file)
+  (time
+   (build-api/jar
+    {:class-dir class-dir
+     :jar-file  jar-file})))
 
 (defn install [_]
   (build-api/install
