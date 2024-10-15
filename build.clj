@@ -24,7 +24,7 @@
   (time
    (build-api/delete {:path build-folder})))
 
-(defn compile [_]
+(defn compile-clj [_]
   (println "compiling" (prs src-dirs) "into" (prs class-dir))
   (time
    (build-api/compile-clj

@@ -1,24 +1,17 @@
-cloc:
-	cloc . --exclude-list-file=cloc.excluded
+.PHONY: clj-clean clj-compile clj-jar clj-install
 
+# CLOJURE BUILDS AND TESTS
+clj-clean:   ; clojure -T:build clean
+clj-compile: ; clojure -T:build compile-clj
+clj-install: ; clojure -T:build install
+clj-jar:     ; clojure -T:build jar
+clj-test:    ; clojure -M:test
+clj-ccjl:      clj-clean clj-compile clj-jar clj-install
+
+# CLOJURE LINTING
 clj-kondo:
 	clj-kondo --config .clj-kondo/config.edn --lint  src/
 	clj-kondo --config .clj-kondo/config.edn --lint test/
 
-lein-cljfmt-check:
-	lein cljfmt check
-
-lein-cljfmt-fix:
-	lein cljfmt fix
-
-lein-bikeshed:
-	lein bikeshed -m 90
-
-lein-eastwood:
-	lein eastwood '{:namespaces [:source-paths]}'
-
-lein-kibit:
-	lein kibit
-
-lein-splint:
-	lein splint
+cloc:
+	cloc . --exclude-list-file=cloc.excluded
