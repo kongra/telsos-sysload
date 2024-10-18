@@ -1,7 +1,7 @@
 (ns telsos.sysload-test
   (:require
    [clojure.test   :refer :all]
-   [telsos.sysload
+   [telsos.sysload :as sysload
     :refer [analyze-system-sources
             ensure-state-ns!
             loadtime
@@ -29,7 +29,7 @@
                   namespace-names
                   namespace-name->source-file
                   namespaces-graph]}
-          (analyze-system-sources "src/")]
+          (analyze-system-sources ["src/" "test/"])]
 
       (is (sequential?         source-files))
       (is (sequential?      namespace-names))
@@ -41,7 +41,7 @@
 (deftest test-namespace-names-ordered
   (testing "namespace-names-ordered"
     (let [{:keys [namespaces-graph
-                  namespace-names]} (analyze-system-sources "src/")
+                  namespace-names]} (analyze-system-sources ["src/" "test/"])
 
           namespace-names-1
           (namespace-names-ordered namespaces-graph namespace-names)]

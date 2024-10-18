@@ -50,9 +50,9 @@
 
 ;; ANALYZING ns DEPENDENCIES IN SRC FOLDERS
 (defn analyze-system-sources
-  [sources-dir]
+  [source-dirs]
   (let [source-files
-        (->> sources-dir str io/file ns-find/find-sources-in-dir)
+        (mapcat #(->> % str io/file ns-find/find-sources-in-dir) source-dirs)
 
         ns-decls
         (map ns-file/read-file-ns-decl source-files)
@@ -169,14 +169,14 @@
 
 (defn- boot-impl!
   ([]
-   (boot-impl! "src/"))
+   (boot-impl! ["src/" "test/"]))
 
-  ([sources-dir]
+  ([source-dirs]
    (let [swatch (swatch-now)
 
          {:keys [namespace-names
                  namespace-name->source-file
-                 namespaces-graph]} (analyze-system-sources sources-dir)
+                 namespaces-graph]} (analyze-system-sources source-dirs)
 
          namespace-names
          (namespace-names-ordered namespaces-graph namespace-names)]
@@ -194,14 +194,14 @@
 
 (defn- sync-impl!
   ([]
-   (sync-impl! "src/"))
+   (sync-impl! ["src/" "test/"]))
 
-  ([sources-dir]
+  ([source-dirs]
    (let [swatch (swatch-now)
 
          {:keys [namespace-names
                  namespace-name->source-file
-                 namespaces-graph]} (analyze-system-sources sources-dir)
+                 namespaces-graph]} (analyze-system-sources source-dirs)
 
          namespace-names
          (namespace-names-ordered namespaces-graph namespace-names)
