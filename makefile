@@ -1,12 +1,12 @@
-.PHONY: clj-clean clj-compile clj-jar clj-install
+.PHONY: clean compile jar install
 
 # CLOJURE BUILDS AND TESTS
-clj-clean:   ; clojure -T:build clean
-clj-compile: ; clojure -T:build compile-clj
-clj-install: ; clojure -T:build install
-clj-jar:     ; clojure -T:build jar
-clj-test:    ; clojure -M:test
-clj-ccjl:      clj-clean clj-compile clj-jar clj-install
+clean:   ; clojure -T:build clean
+compile: ; clojure -T:build compile-clj
+install: ; clojure -T:build install
+jar:     ; clojure -T:build jar
+test:    ; clojure -M:test
+ccjl:      clean compile jar install
 
 # CLOJURE LINTING
 clj-kondo:
