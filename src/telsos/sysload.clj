@@ -9,7 +9,8 @@
    [clojure.tools.namespace.find       :as          ns-find]
    [clojure.tools.namespace.parse      :as         ns-parse]
    [hashp.core                         :as       hashp-core]
-   [nrepl.middleware                   :as nrepl-middleware])
+   [nrepl.middleware                   :as nrepl-middleware]
+   [telsos.sysload.human-readable      :as   human-readable])
 
   (:import (java.lang.management ManagementFactory RuntimeMXBean)))
 
@@ -256,12 +257,54 @@
 (def boot! (Boot.))
 (def sync! (Sync.))
 
+;; ROOM/GC
+(defn room-impl
+  []
+  (let [rt     (.. Runtime getRuntime)
+        free   (.freeMemory        rt)
+        total  (.totalMemory       rt)
+        mx     (.maxMemory         rt)
+        used   (- total free)
+        digits 2]
+
+    (println
+     "Used:"  (human-readable/human-readable-bytes used  digits) "|"
+     "Free:"  (human-readable/human-readable-bytes free  digits) "|"
+     "Total:" (human-readable/human-readable-bytes total digits) "|"
+     "Max:"   (human-readable/human-readable-bytes mx    digits))))
+
+(defn gc-impl
+  ([] (gc-impl {:verbose? true}))
+
+  ([{:keys [verbose?]}]
+   (System/gc)
+   (when verbose? (room-impl))))
+
+(deftype ^:private Room []
+  clojure.lang.IDeref
+  (deref [_this] (room-impl))
+
+  clojure.lang.IFn
+  (invoke [_this] (room-impl)))
+
+(deftype ^:private GC []
+  clojure.lang.IDeref
+  (deref [_this] (gc-impl))
+
+  clojure.lang.IFn
+  (invoke [_this] (gc-impl)))
+
+(def room (Room.))
+(def gc   (GC.))
+
 ;; nREPL MIDDLEWARE TO INTERN boot! AND sync! TO user NAMESPACE ON START
 (defn- on-nrepl-start []
   (when-let [user-ns (find-ns 'user)]
     (intern user-ns 'boot! boot!)
     (intern user-ns 'sync! sync!)
-    (println "boot! and sync! interned into user")
+    (intern user-ns 'room  room)
+    (intern user-ns 'gc      gc)
+    (println "boot! sync! room gc interned into user")
 
     #p :hashp-preloaded))
 
