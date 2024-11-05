@@ -1,14 +1,7 @@
 (ns telsos.sysload-test
   (:require
-   [clojure.test   :refer :all]
-   [telsos.sysload :as sysload
-    :refer [analyze-system-sources
-            ensure-state-ns!
-            loadtime
-            namespace-names-ordered
-            set-loadtime!
-            set-loadtime-current!
-            state-atom]]))
+   [clojure.test :refer :all]
+   [telsos.sysload :as sysload :refer [analyze-system-sources ensure-state-ns! loadtime namespace-names-ordered set-loadtime! set-loadtime-current! state-atom]]))
 
 (deftest test-state-namespace
   (testing "ensure-state-ns!"
@@ -46,7 +39,7 @@
           namespace-names-1
           (namespace-names-ordered namespaces-graph namespace-names)]
 
-      (is (seq namespace-names  ))
+      (is (seq namespace-names))
       (is (seq namespace-names-1))
 
       (is (= (set namespace-names)
