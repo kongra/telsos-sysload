@@ -1,6 +1,6 @@
 (ns telsos.sysload-test
   (:require
-   [clojure.test :refer :all]
+   [clojure.test :refer [deftest is testing]]
    [telsos.sysload :as sysload :refer [analyze-system-sources ensure-state-ns! loadtime namespace-names-ordered set-loadtime! set-loadtime-current! state-atom]]))
 
 (deftest test-state-namespace

@@ -1,5 +1,3 @@
-;; Created 2024-09-27
-;; © 2024 Konrad Grzanek <kongra@gmail.com>
 (ns telsos.sysload
   (:require
    [clojure.java.io :as io]
@@ -24,14 +22,14 @@
 (defn ensure-state-ns!
   []
   (or (find-ns STATE-NAMESPACE-SYMBOL)
-    (let [ns-              (create-ns   STATE-NAMESPACE-SYMBOL)
-          runtime-mx-bean  (ManagementFactory/getRuntimeMXBean)
-          start-time-msecs (RuntimeMXBean/.getStartTime runtime-mx-bean)]
+      (let [ns-              (create-ns   STATE-NAMESPACE-SYMBOL)
+            runtime-mx-bean  (ManagementFactory/getRuntimeMXBean)
+            start-time-msecs (RuntimeMXBean/.getStartTime runtime-mx-bean)]
 
-      (intern ns- STATE-ATOM-SYMBOL (atom {:loadtime start-time-msecs}))
+        (intern ns- STATE-ATOM-SYMBOL (atom {:loadtime start-time-msecs}))
 
-      ;; finally we return
-      ns-)))
+        ;; finally we return
+        ns-)))
 
 (defn state-atom
   []
@@ -64,7 +62,7 @@
         namespace-name?
         (set namespace-names)]
 
-    {:source-files     source-files
+    {:source-files    source-files
      :namespace-names namespace-names
 
      :namespace-name->source-file
@@ -79,7 +77,7 @@
                        (ns-deps/depend graph nsname dep)
                        graph))
 
-             graph (ns-parse/deps-from-ns-decl decl))))
+                   graph (ns-parse/deps-from-ns-decl decl))))
 
        (ns-deps/graph) ns-decls)}))
 
@@ -95,7 +93,7 @@
 
 (defn namespace-names-ordered
   [namespaces-graph namespace-names]
-  (loop [results                    []
+  (loop [results                   []
          allowed-dependencies      #{}
          namespace-names-remaining namespace-names]
 
@@ -104,21 +102,21 @@
 
       (let [namespace-names-next
             (filter (partial namespace-name-to-include-next?
-                      namespaces-graph
-                      allowed-dependencies)
-              namespace-names-remaining)
+                             namespaces-graph
+                             allowed-dependencies)
+                    namespace-names-remaining)
 
             namespace-names-next-set
             (set namespace-names-next)]
 
         (recur #_results
-          (conj results (sort namespace-names-next))
+               (conj results (sort namespace-names-next))
 
-          #_allowed-dependencies
-          (set/union allowed-dependencies namespace-names-next-set)
+               #_allowed-dependencies
+               (set/union allowed-dependencies namespace-names-next-set)
 
-          #_namespace-names-remaining
-          (remove namespace-names-next-set namespace-names-remaining))))))
+               #_namespace-names-remaining
+               (remove namespace-names-next-set namespace-names-remaining))))))
 
 ;; TIME MEASUREMENT
 (defn- swatch-now
@@ -130,14 +128,14 @@
   (let [value (* (- (long (swatch-now)) (long swatch)) 0.000001)]
     (format "%.3f msecs" value)))
 
-;; BOOT/SYNC IMPL.
+;; BOOT/SYNCH IMPL.
 (defn- load-src-file!
   [file]
-  (let [file    (str file)
+  (let [file   (str file)
         _      (println "Loading" file "...")
         swatch (swatch-now)]
 
-    (load-file (str file))
+    (load-file file)
     (println "Done in" (elapstr swatch))))
 
 (defn- ensure-file
@@ -148,12 +146,12 @@
                (str "Source file not found for namespace " namespace-name))))
     file))
 
-(defn- out-of-sync?
+(defn- out-of-synch?
   [namespace-name->source-file namespace-name]
   (> (->> (ensure-file namespace-name->source-file namespace-name)
-       str io/file (.lastModified))
+          str io/file (.lastModified))
 
-    (loadtime)))
+     (loadtime)))
 
 (def ^:private NS-FINALIZE-SYMBOL 'ns-finalize)
 
@@ -191,11 +189,11 @@
        (load-src-file! (ensure-file namespace-name->source-file namespace-name)))
 
      (set-loadtime-current!)
-     (println "telsos.sysload/boot! finished in" (elapstr swatch)))))
+     (println "telsos.sysload/boot finished in" (elapstr swatch)))))
 
-(defn- sync-impl!
+(defn- synch-impl!
   ([]
-   (sync-impl! ["src/" "test/"]))
+   (synch-impl! ["src/" "test/"]))
 
   ([source-dirs]
    (let [swatch (swatch-now)
@@ -209,8 +207,8 @@
 
          dirty-namespace-names-set
          (->> namespace-names
-           (filter (partial out-of-sync? namespace-name->source-file))
-           set)]
+              (filter (partial out-of-synch? namespace-name->source-file))
+              set)]
 
      (when (seq dirty-namespace-names-set)
        (let [dirty-namespace-names
@@ -237,9 +235,9 @@
            (load-src-file! (ensure-file namespace-name->source-file namespace-name)))))
 
      (set-loadtime-current!)
-     (println "telsos.sysload/sync! finished in" (elapstr swatch)))))
+     (println "telsos.sysload/synch finished in" (elapstr swatch)))))
 
-;; BOOT/SYNC FACADE
+;; BOOT/SYNCH FACADE
 (deftype ^:private Boot []
   clojure.lang.IDeref
   (deref [_this] (boot-impl!))
@@ -247,20 +245,20 @@
   clojure.lang.IFn
   (invoke [_this] (boot-impl!)))
 
-(deftype ^:private Sync []
+(deftype ^:private Synch []
   clojure.lang.IDeref
-  (deref [_this] (sync-impl!))
+  (deref [_this] (synch-impl!))
 
   clojure.lang.IFn
-  (invoke [_this] (sync-impl!)))
+  (invoke [_this] (synch-impl!)))
 
-(def boot! (Boot.))
-(def sync! (Sync.))
+(def boot (Boot.))
+(def synch (Synch.))
 
 ;; ROOM/GC
 (defn room-impl
   []
-  (let [rt      (.. Runtime getRuntime)
+  (let [rt     (.. Runtime getRuntime)
         free   (.freeMemory        rt)
         total  (.totalMemory       rt)
         mx     (.maxMemory         rt)
@@ -297,14 +295,14 @@
 (def room (Room.))
 (def gc   (GC.))
 
-;; nREPL MIDDLEWARE TO INTERN boot! AND sync! TO user NAMESPACE ON START
+;; nREPL MIDDLEWARE TO INTERN boot, synch AND FRIENDS TO user NAMESPACE ON START
 (defn- on-nrepl-start []
   (when-let [user-ns (find-ns 'user)]
-    (intern user-ns 'boot! boot!)
-    (intern user-ns 'sync! sync!)
-    (intern user-ns 'room  room)
-    (intern user-ns 'gc      gc)
-    (println "boot! sync! room gc interned into user")
+    (intern user-ns 'boot   boot)
+    (intern user-ns 'synch synch)
+    (intern user-ns 'room   room)
+    (intern user-ns 'gc       gc)
+    (println "boot synch room gc interned into user")
 
     #p :hashp-preloaded))
 
