@@ -3,7 +3,7 @@
   (:require
    [clojure.tools.build.api :as build-api]))
 
-(def lib     'kongra/telsos-sysload)
+(def lib     'com.github.kongra/telsos-sysload)
 (def basis   (build-api/create-basis {:project "deps.edn"}))
 (def version (format "0.1.%s" (build-api/git-count-revs nil)))
 
@@ -17,6 +17,15 @@
 (def classes-dir "target/classes/")
 
 (def jar-file  (format "target/%s-%s.jar" (name lib) version))
+
+;; MAVEN
+(def pom-data
+  [[:licenses
+    [:license
+     [:name "Eclipse Public License 2.0"]
+     [:url "https://www.eclipse.org/legal/epl-2.0/"]
+     [:distribution "repo"]
+     [:comments "Eclipse Public License Version 2.0"]]]])
 
 ;; TASKS
 (defn- prs [x] (with-out-str (pr x)))
@@ -46,7 +55,8 @@
        :lib       lib
        :version   version
        :basis     basis
-       :src-dirs  src-dirs}))
+       :src-dirs  src-dirs
+       :pom-data  pom-data}))
 
   (println "copying" (prs src+resources-dirs) "to" (prs classes-dir))
   (time
