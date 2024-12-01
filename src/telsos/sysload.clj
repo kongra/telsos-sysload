@@ -1,5 +1,6 @@
 (ns telsos.sysload
   (:require
+   [clojure.edn :as edn]
    [clojure.java.io :as io]
    [clojure.set :as set]
    [clojure.tools.namespace.dependency :as ns-deps]
@@ -166,11 +167,18 @@
     (remove-ns namespace-name)
     (println "Removed namespace" namespace-name)))
 
+(defn- resource-config []
+  (or (when-let [res (io/resource "telsos-sysload.edn")]
+        (edn/read-string (slurp res)))
+
+      {:source-dirs ["src/" "test/"]}))
+
 (defn- boot-impl!
   ([]
-   (boot-impl! ["src/" "test/"]))
+   (boot-impl! (:source-dirs (resource-config))))
 
   ([source-dirs]
+   (println "telsos.sysload/boot" :source-dirs (pr-str source-dirs))
    (let [swatch (swatch-now)
 
          {:keys [namespace-names
@@ -193,9 +201,10 @@
 
 (defn- synch-impl!
   ([]
-   (synch-impl! ["src/" "test/"]))
+   (synch-impl! (:source-dirs (resource-config))))
 
   ([source-dirs]
+   (println "telsos.sysload/synch" :source-dirs (pr-str source-dirs))
    (let [swatch (swatch-now)
 
          {:keys [namespace-names
@@ -243,14 +252,14 @@
   (deref [_this] (boot-impl!))
 
   clojure.lang.IFn
-  (invoke [_this] (boot-impl!)))
+  (invoke [_this & args] (apply boot-impl! args)))
 
 (deftype ^:private Synch []
   clojure.lang.IDeref
   (deref [_this] (synch-impl!))
 
   clojure.lang.IFn
-  (invoke [_this] (synch-impl!)))
+  (invoke [_this & args] (apply synch-impl! args)))
 
 (def boot (Boot.))
 (def synch (Synch.))
