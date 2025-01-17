@@ -252,16 +252,18 @@
   (deref [_this] (boot-impl!))
 
   clojure.lang.IFn
-  (invoke [_this & args] (apply boot-impl! args)))
+  (invoke [_this]             (boot-impl!))
+  (invoke [_this source-dirs] (boot-impl! source-dirs)))
 
 (deftype ^:private Synch []
   clojure.lang.IDeref
   (deref [_this] (synch-impl!))
 
   clojure.lang.IFn
-  (invoke [_this & args] (apply synch-impl! args)))
+  (invoke [_this]             (synch-impl!))
+  (invoke [_this source-dirs] (synch-impl! source-dirs)))
 
-(def boot (Boot.))
+(def boot  (Boot.))
 (def synch (Synch.))
 
 ;; ROOM/GC
