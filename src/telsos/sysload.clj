@@ -7,7 +7,7 @@
    [clojure.tools.namespace.file :as ns-file]
    [clojure.tools.namespace.find :as ns-find]
    [clojure.tools.namespace.parse :as ns-parse]
-   [hashp.core]
+   [hashp.install]
    [nrepl.middleware :as nrepl-middleware]
    [telsos.sysload.human-readable :as human-readable])
   (:import
@@ -15,6 +15,8 @@
 
 (set! *warn-on-reflection*       true)
 (set! *unchecked-math* :warn-on-boxed)
+
+(hashp.install/install!)
 
 ;; STATE NAMESPACE
 (def ^:private STATE-NAMESPACE-SYMBOL 't3ls0s-sysl04d.c0r3)

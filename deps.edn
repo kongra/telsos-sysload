@@ -1,7 +1,7 @@
-{:deps {org.clojure/clojure         {:mvn/version "1.12.3"}
-        org.clojure/tools.namespace {:mvn/version "1.5.0"}
-        hashp/hashp                 {:mvn/version "0.2.2"}
-        nrepl/nrepl                 {:mvn/version "1.5.1"}}
+{:deps {org.clojure/clojure         {:mvn/version "1.12.4"}
+        org.clojure/tools.namespace {:mvn/version  "1.5.0"}
+        dev.weavejester/hashp       {:mvn/version  "0.5.1"}
+        nrepl/nrepl                 {:mvn/version  "1.5.1"}}
 
  :aliases
  {:build
