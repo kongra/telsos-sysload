@@ -9,7 +9,6 @@
 
 ;; SRC/RESOURCES
 (def src-dirs           ["src/"])
-(def resources-dirs     ["resources/"])
 (def src+resources-dirs ["src/" "resources/"])
 
 ;; TARGET(S)
@@ -42,7 +41,6 @@
        :src-dirs  src-dirs
        :java-opts ["-XX:+UseStringDeduplication"
                    "-Dclojure.compiler.direct-linking=true"
-                   "-Dclojure.warn.on.reflection=false"
                    "-Dclojure.assert=true"]
 
        :class-dir classes-dir})))

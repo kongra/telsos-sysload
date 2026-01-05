@@ -14,6 +14,13 @@ install:
 kaocha:
 	@clojure -M:kaocha
 
+lint:
+	@clj-kondo --lint src/
+	@clj-kondo --lint test/
+	@kibit
+	@splint src/
+	@splint test/
+
 # DEPLOYMENT TO CLOJARS
 ARTIFACT_BASE = telsos-sysload
 POM_FILE = target/classes/META-INF/maven/com.github.kongra/telsos-sysload/pom.xml

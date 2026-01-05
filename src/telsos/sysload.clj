@@ -23,6 +23,8 @@
 (def ^:private STATE-ATOM-SYMBOL               'state-atom)
 
 (defn ensure-state-ns!
+  "Creates or retrieves the internal state namespace used for storing load state.
+  Returns the state namespace."
   []
   (or (find-ns STATE-NAMESPACE-SYMBOL)
       (let [ns-              (create-ns   STATE-NAMESPACE-SYMBOL)
@@ -35,23 +37,37 @@
         ns-)))
 
 (defn state-atom
+  "Returns the internal state atom containing the system load state.
+  The state atom contains at least {:loadtime <timestamp-in-msecs>}."
   []
   (-> (ensure-state-ns!) (ns-resolve STATE-ATOM-SYMBOL) deref))
 
-(defn loadtime ^long
-  []
+(defn loadtime
+  "Returns the timestamp (in milliseconds) of the last system load/reload."
+  ^long []
   (:loadtime @(state-atom)))
 
 (defn set-loadtime!
+  "Sets the system loadtime to the specified timestamp in milliseconds.
+  Returns the updated state map."
   [^long msecs]
   (swap! (state-atom) assoc :loadtime msecs))
 
 (defn set-loadtime-current!
+  "Sets the system loadtime to the current time.
+  Returns the updated state map."
   []
   (set-loadtime! (System/currentTimeMillis)))
 
 ;; ANALYZING ns DEPENDENCIES IN SRC FOLDERS
 (defn analyze-system-sources
+  "Analyzes source directories and builds a namespace dependency graph.
+
+  Returns a map with:
+  - :source-files - collection of source file objects
+  - :namespace-names - vector of namespace symbols
+  - :namespace-name->source-file - map from namespace symbol to file
+  - :namespaces-graph - dependency graph (clojure.tools.namespace.dependency/MapDependencyGraph)"
   [source-dirs]
   (let [source-files
         (mapcat #(->> % str io/file ns-find/find-sources-in-dir) source-dirs)
@@ -95,6 +111,14 @@
     (set allowed-dependencies)))
 
 (defn namespace-names-ordered
+  "Orders namespace names based on their dependencies using topological sort.
+  Namespaces are ordered so that dependencies come before their dependents.
+
+  Arguments:
+  - namespaces-graph: dependency graph from analyze-system-sources
+  - namespace-names: collection of namespace symbols to order
+
+  Returns a sequence of namespace symbols in dependency order."
   [namespaces-graph namespace-names]
   (loop [results                   []
          allowed-dependencies      #{}
@@ -112,13 +136,11 @@
             namespace-names-next-set
             (set namespace-names-next)]
 
-        (recur #_results
+        (recur ; results
                (conj results (sort namespace-names-next))
-
-               #_allowed-dependencies
+               ; allowed-dependencies
                (set/union allowed-dependencies namespace-names-next-set)
-
-               #_namespace-names-remaining
+               ; namespace-names-remaining
                (remove namespace-names-next-set namespace-names-remaining))))))
 
 ;; TIME MEASUREMENT
@@ -138,8 +160,13 @@
         _      (println "Loading" file "...")
         swatch (swatch-now)]
 
-    (load-file file)
-    (println "Done in" (elapstr swatch))))
+    (try
+      (load-file file)
+      (println "Done in" (elapstr swatch))
+      (catch Exception e
+        (println "ERROR loading" file ":" (Exception/.getMessage e))
+        (println "  Exception:" (class e))
+        (throw e)))))
 
 (defn- ensure-file
   [namespace-name->source-file namespace-name]
@@ -150,6 +177,11 @@
     file))
 
 (defn- out-of-synch?
+  "Checks if a namespace's source file has been modified since the last load.
+
+  Note: Uses millisecond-precision timestamps. On filesystems with lower precision,
+  modifications within the same millisecond may not be detected. This is rare in
+  practice for typical development workflows."
   [namespace-name->source-file namespace-name]
   (> (->> (ensure-file namespace-name->source-file namespace-name)
           str io/file (.lastModified))
@@ -171,7 +203,19 @@
 
 (defn- resource-config []
   (or (when-let [res (io/resource "telsos-sysload.edn")]
-        (edn/read-string (slurp res)))
+        (try
+          (let [config (edn/read-string (slurp res))]
+            (when-not (map? config)
+              (throw (ex-info "Config must be a map" {:config config})))
+            (when-not (contains? config :source-dirs)
+              (throw (ex-info "Config must contain :source-dirs key" {:config config})))
+            (when-not (sequential? (:source-dirs config))
+              (throw (ex-info ":source-dirs must be a sequence" {:config config})))
+            config)
+          (catch Exception e
+            (println "ERROR reading telsos-sysload.edn:" (Exception/.getMessage e))
+            (println "  Using default configuration")
+            {:source-dirs ["src/" "test/"]})))
 
       {:source-dirs ["src/" "test/"]}))
 
@@ -271,10 +315,11 @@
 ;; ROOM/GC
 (defn room-impl
   []
-  (let [rt     (.. Runtime getRuntime)
-        free   (.freeMemory        rt)
-        total  (.totalMemory       rt)
-        mx     (.maxMemory         rt)
+  (let [rt    (Runtime/getRuntime)
+        free  (Runtime/.freeMemory  rt)
+        total (Runtime/.totalMemory rt)
+        mx    (Runtime/.maxMemory   rt)
+
         used   (- total free)
         digits 2]
 
